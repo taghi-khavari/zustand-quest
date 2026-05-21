@@ -16,6 +16,14 @@ describe("validateCode", () => {
     }
   });
 
+  it("does not accept starter code as complete", () => {
+    for (const level of levels) {
+      const result = validateCode(level, level.starterCode);
+
+      expect(result.isCorrect, level.id).toBe(false);
+    }
+  });
+
   it("accepts the level solution", () => {
     const level = levels[0];
     const result = validateCode(level, level.solutionCode);

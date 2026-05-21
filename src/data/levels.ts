@@ -109,9 +109,17 @@ export const useBearStore = create<BearState>()((set) => ({
     conceptTags: ["selectors", "rendering"],
     learningObjectives: ["Subscribe a component to a single field", "Avoid full-store subscriptions"],
     story: "A React cabin only needs the bear count, not the whole forest inventory.",
-    mission: "Subscribe BearCounter only to bears.",
+    mission: "Use the existing useBearStore hook to subscribe BearCounter only to bears.",
     explanation: "Selectors are the default performance tool in Zustand. A selector narrows what makes a component re-render.",
-    starterCode: `function BearCounter() {
+    starterCode: `type BearState = {
+  bears: number;
+  increasePopulation: () => void;
+  removeAllBears: () => void;
+};
+
+declare const useBearStore: <T>(selector: (state: BearState) => T) => T;
+
+function BearCounter() {
   const bears = // TODO
   return <p>{bears} bears</p>;
 }`,
@@ -142,8 +150,16 @@ export const useBearStore = create<BearState>()((set) => ({
     learningObjectives: ["Select actions from the store", "Wire actions to React events"],
     story: "The lever is built, but it is not connected to the store action.",
     mission: "Read increasePopulation from the store and call it on click.",
-    explanation: "Actions are just functions in the store. Select them the same way you select state.",
-    starterCode: `function AddBearButton() {
+    explanation: "Actions are just functions in the store. The existing useBearStore hook exposes bears, increasePopulation, and removeAllBears.",
+    starterCode: `type BearState = {
+  bears: number;
+  increasePopulation: () => void;
+  removeAllBears: () => void;
+};
+
+declare const useBearStore: <T>(selector: (state: BearState) => T) => T;
+
+function AddBearButton() {
   const increasePopulation = // TODO
   return <button>Add bear</button>;
 }`,
@@ -174,7 +190,9 @@ export const useBearStore = create<BearState>()((set) => ({
     story: "The name tag printer should rename the mascot without changing the bear count.",
     mission: "Add a renameBear action that updates name without removing bears.",
     explanation: "By default, set shallow-merges partial state. This makes focused field updates concise.",
-    starterCode: `type BearState = {
+    starterCode: `${starterHeader}
+
+type BearState = {
   bears: number;
   name: string;
   renameBear: (newName: string) => void;
@@ -210,7 +228,9 @@ export const useBearStore = create<BearState>()((set) => ({
     story: "The academy should welcome a new bear only when the pantry has food.",
     mission: "Add addBearIfFoodAvailable using get() and set().",
     explanation: "The store creator can receive both set and get. Use get when an action needs to inspect current state before deciding what to do.",
-    starterCode: `type BearState = {
+    starterCode: `${starterHeader}
+
+type BearState = {
   bears: number;
   food: number;
   addBearIfFoodAvailable: () => void;
@@ -253,7 +273,9 @@ export const useBearStore = create<BearState>()((set) => ({
     story: "The SaaS dashboard has a tiny merch cart for team supplies.",
     mission: "Implement addToCart(product) with an immutable array update.",
     explanation: "Zustand does not require reducers. Use normal JavaScript immutable updates in actions.",
-    starterCode: `type Product = { id: string; name: string; price: number };
+    starterCode: `${starterHeader}
+
+type Product = { id: string; name: string; price: number };
 type CartState = { items: Product[]; addToCart: (product: Product) => void };
 
 export const useCartStore = create<CartState>()((set) => ({
@@ -285,12 +307,18 @@ export const useCartStore = create<CartState>()((set) => ({
     story: "Duplicate honey jars are clogging the cart.",
     mission: "Implement removeItem(id) using filter.",
     explanation: "For array removals, return a new array that excludes the item. Components subscribed to items will see the change.",
-    starterCode: `type CartState = {
+    starterCode: `${starterHeader}
+
+type Product = { id: string; name: string; price: number };
+type CartState = {
   items: Product[];
   removeItem: (id: string) => void;
 };
 
-removeItem: // TODO`,
+export const useCartStore = create<CartState>()((set) => ({
+  items: [],
+  removeItem: // TODO
+}));`,
     solutionCode: `removeItem: (id) =>
   set((state) => ({ items: state.items.filter((item) => item.id !== id) }))`,
     validation: {
@@ -317,7 +345,16 @@ removeItem: // TODO`,
     story: "The checkout reset should clear draft data while keeping the cart controls alive.",
     mission: "Reset cart to initialState without using replace mode.",
     explanation: "A normal set(initialState) shallow-merges data fields and leaves actions intact when the action lives in the same object.",
-    starterCode: `const initialState = { items: [], coupon: null };
+    starterCode: `${starterHeader}
+
+type Product = { id: string; name: string; price: number };
+type CartState = {
+  items: Product[];
+  coupon: string | null;
+  reset: () => void;
+};
+
+const initialState = { items: [], coupon: null };
 
 export const useCartStore = create<CartState>()((set) => ({
   ...initialState,
@@ -348,7 +385,19 @@ export const useCartStore = create<CartState>()((set) => ({
     story: "A dashboard panel is re-rendering whenever unrelated settings change.",
     mission: "Fix the component so it selects only selectedField.",
     explanation: "Calling a store hook with no selector subscribes the component to every store change.",
-    starterCode: `function ExpensivePanel() {
+    starterCode: `type DashboardState = {
+  selectedField: number;
+  theme: "light" | "dark";
+  sidebarOpen: boolean;
+};
+
+declare const useDashboardStore: {
+  (): DashboardState;
+  <T>(selector: (state: DashboardState) => T): T;
+};
+declare function Chart(props: { value: number }): JSX.Element;
+
+function ExpensivePanel() {
   const state = useDashboardStore();
   return <Chart value={state.selectedField} />;
 }`,
@@ -381,6 +430,14 @@ export const useCartStore = create<CartState>()((set) => ({
     explanation: "Object selectors create a new object each time. useShallow compares object fields so unchanged values do not re-render.",
     starterCode: `import { useShallow } from "zustand/react/shallow";
 
+type BearResourceState = {
+  nuts: number;
+  honey: number;
+  berries: number;
+};
+
+declare const useBearStore: <T>(selector: (state: BearResourceState) => T) => T;
+
 function Pantry() {
   const resources = // TODO
   return <p>{resources.nuts} nuts, {resources.honey} honey</p>;
@@ -412,7 +469,12 @@ function Pantry() {
     story: "Checkout total should be calculated from cart items, not manually synced.",
     mission: "Compute totalPrice from items in a selector.",
     explanation: "Derived values can often live outside the store as selectors. That avoids duplicated state that can drift.",
-    starterCode: `function CheckoutTotal() {
+    starterCode: `type CartItem = { id: string; price: number; quantity: number };
+type CartState = { items: CartItem[] };
+
+declare const useCartStore: <T>(selector: (state: CartState) => T) => T;
+
+function CheckoutTotal() {
   const totalPrice = // TODO
   return <strong>{totalPrice}</strong>;
 }`,
@@ -443,7 +505,12 @@ function Pantry() {
     story: "The cart module needs clean entry points for product engineers.",
     mission: "Create useCartItems and useCartTotal custom hooks.",
     explanation: "Domain-specific hooks make component dependencies obvious and keep selector logic reusable.",
-    starterCode: `export const useCartItems = // TODO
+    starterCode: `type CartItem = { id: string; price: number; quantity: number };
+type CartState = { items: CartItem[] };
+
+declare const useCartStore: <T>(selector: (state: CartState) => T) => T;
+
+export const useCartItems = // TODO
 export const useCartTotal = // TODO`,
     solutionCode: `export const useCartItems = () => useCartStore((state) => state.items);
 export const useCartTotal = () =>
@@ -474,7 +541,17 @@ export const useCartTotal = () =>
     story: "The fish market panel needs a client-state loading flow.",
     mission: "Implement fetchFish with loading, success, and error status.",
     explanation: "Zustand actions can be async. Use set before and after the awaited work to drive UI state.",
-    starterCode: `fetchFish: async () => {
+    starterCode: `type Fish = { id: string; name: string };
+type FishMarketState = {
+  fish: Fish[];
+  status: "idle" | "loading" | "success" | "error";
+  fetchFish: () => Promise<void>;
+};
+
+declare const mockFetchFish: () => Promise<Fish[]>;
+declare const set: (nextState: Partial<FishMarketState>) => void;
+
+fetchFish: async () => {
   // TODO
 }`,
     solutionCode: `fetchFish: async () => {
@@ -511,7 +588,17 @@ export const useCartTotal = () =>
     story: "The cart should feel instant, but failed saves need a clean recovery path.",
     mission: "Add item optimistically and rollback on failure.",
     explanation: "Optimistic UI updates client state first, then restores a previous snapshot if the server request fails.",
-    starterCode: `addItemOptimistic: async (item) => {
+    starterCode: `type Product = { id: string; name: string; price: number };
+type CartState = {
+  items: Product[];
+  addItemOptimistic: (item: Product) => Promise<void>;
+};
+
+declare const get: () => CartState;
+declare const set: (nextState: Partial<CartState> | ((state: CartState) => Partial<CartState>)) => void;
+declare const saveItem: (item: Product) => Promise<void>;
+
+addItemOptimistic: async (item) => {
   // TODO
 }`,
     solutionCode: `addItemOptimistic: async (item) => {
@@ -547,7 +634,11 @@ export const useCartTotal = () =>
     story: "The dashboard bins are mixed. Some cards belong in Zustand, some in a server cache.",
     mission: "Choose Zustand for UI/client state and React Query/SWR for server data.",
     explanation: "Zustand is excellent for client state. Server data usually needs caching, invalidation, refetching, and stale-time controls.",
-    starterCode: `const zustand = [
+    starterCode: `// Available dashboard fields:
+// modalOpen, selectedTab, cartDraft
+// authenticatedUserCache, serverProductsList
+
+const zustand = [
   // TODO
 ];
 
@@ -580,7 +671,14 @@ const serverCache = ["authenticatedUserCache", "serverProductsList"];`,
     story: "The academy should remember a theme and cart draft after a refresh simulation.",
     mission: "Wrap the store with persist and provide a name.",
     explanation: "persist stores selected state in localStorage by default. Use a stable key and persist only useful state.",
-    starterCode: `import { persist } from "zustand/middleware";
+    starterCode: `${starterHeader}
+import { persist } from "zustand/middleware";
+
+type SettingsState = {
+  theme: "system" | "light" | "dark";
+  cartDraft: string[];
+  setTheme: (theme: SettingsState["theme"]) => void;
+};
 
 export const useSettingsStore = create<SettingsState>()(
   // TODO
@@ -619,7 +717,14 @@ export const useSettingsStore = create<SettingsState>()(
     story: "The cave is keeping modal state it should forget.",
     mission: "Persist only theme, not temporary modal state.",
     explanation: "partialize lets you store a subset of state. This keeps localStorage small and avoids stale UI surprises.",
-    starterCode: `persist(
+    starterCode: `type SettingsState = {
+  theme: "dark" | "light";
+  modalOpen: boolean;
+  setTheme: (theme: SettingsState["theme"]) => void;
+  setModalOpen: (modalOpen: boolean) => void;
+};
+
+persist(
   (set) => ({
     theme: "dark",
     modalOpen: false,
@@ -656,7 +761,14 @@ export const useSettingsStore = create<SettingsState>()(
     story: "The debugging telescope shows mystery updates. Give the actions names.",
     mission: "Add devtools and named actions.",
     explanation: "devtools integrates with Redux DevTools. Named set calls make timelines readable during debugging.",
-    starterCode: `import { devtools } from "zustand/middleware";
+    starterCode: `${starterHeader}
+import { devtools } from "zustand/middleware";
+
+type Product = { id: string; name: string; price: number };
+type CartState = {
+  items: Product[];
+  addItem: (item: Product) => void;
+};
 
 export const useCartStore = create<CartState>()(
   // TODO
@@ -692,7 +804,19 @@ export const useCartStore = create<CartState>()(
     story: "The forest has deeply nested nest state, and spread syntax is becoming hard to read.",
     mission: "Use immer to clear nested nest items with mutable syntax.",
     explanation: "Immer middleware lets you write convenient draft mutations while producing immutable updates.",
-    starterCode: `import { immer } from "zustand/middleware/immer";
+    starterCode: `${starterHeader}
+import { immer } from "zustand/middleware/immer";
+
+type ForestState = {
+  forest: {
+    tree: {
+      nest: {
+        items: string[];
+      };
+    };
+  };
+  clearNest: () => void;
+};
 
 export const useForestStore = create<ForestState>()(
   // TODO
@@ -730,7 +854,14 @@ export const useForestStore = create<ForestState>()(
     story: "Cart, user, and UI teams each need their own section of the village.",
     mission: "Split cart, user, and UI slices and compose them into one store.",
     explanation: "The slices pattern keeps large stores modular without forcing every feature into one giant object literal.",
-    starterCode: `type StoreState = CartSlice & UserSlice & UiSlice;
+    starterCode: `${starterHeader}
+import type { StateCreator } from "zustand";
+
+type Product = { id: string; name: string };
+type User = { id: string; name: string };
+
+// Define CartSlice, UserSlice, and UiSlice before combining them.
+type StoreState = CartSlice & UserSlice & UiSlice;
 
 const createCartSlice = // TODO
 const createUserSlice = // TODO
@@ -777,7 +908,12 @@ export const useAppStore = create<StoreState>()((...a) => ({
     story: "A non-React service needs to update state, while components still subscribe normally.",
     mission: "Create a vanilla store with createStore and bind it with useStore.",
     explanation: "Vanilla stores are useful for code that lives outside React, such as services, workers, or integration modules.",
-    starterCode: `// TODO: create a vanilla store and read from it in React`,
+    starterCode: `type PositionState = {
+  x: number;
+  setX: (x: number) => void;
+};
+
+// TODO: import createStore and useStore, then create a vanilla store and read x in React`,
     solutionCode: `import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 
@@ -812,7 +948,19 @@ const x = useStore(positionStore, (state) => state.x);`,
     story: "A canvas marker needs every position update, but React renders should stay quiet.",
     mission: "Subscribe to position changes inside useEffect and return unsubscribe.",
     explanation: "Store subscriptions are useful for imperative integrations where React rendering is not the right update loop.",
-    starterCode: `useEffect(() => {
+    starterCode: `type PositionState = {
+  position: { x: number; y: number };
+};
+
+declare const usePositionStore: {
+  subscribe: <T>(
+    selector: (state: PositionState) => T,
+    listener: (value: T) => void
+  ) => () => void;
+};
+declare const drawMarker: (position: PositionState["position"]) => void;
+
+useEffect(() => {
   // TODO
 }, []);`,
     solutionCode: `useEffect(() => {
@@ -844,6 +992,9 @@ const x = useStore(positionStore, (state) => state.x);`,
     mission: "Use a client boundary and hasHydrated/mounted pattern before rendering persisted state.",
     explanation: "Next.js renders on the server first. Browser-only persisted values can mismatch until hydration finishes.",
     starterCode: `"use client";
+
+type SettingsState = { theme: "system" | "light" | "dark" };
+declare const useSettingsStore: <T>(selector: (state: SettingsState) => T) => T;
 
 function ThemeLabel() {
   const theme = useSettingsStore((state) => state.theme);
@@ -885,7 +1036,18 @@ function ThemeLabel() {
     story: "The academy test bench needs proof that store actions behave.",
     mission: "Write a test that resets state, calls an action in act, and asserts getState.",
     explanation: "Zustand stores can be tested without rendering a component. Reset state, run actions, assert state.",
-    starterCode: `it("increments bears", () => {
+    starterCode: `type BearState = {
+  bears: number;
+  increasePopulation: () => void;
+};
+
+const initialState: Pick<BearState, "bears"> = { bears: 0 };
+declare const useBearStore: {
+  setState: (state: Pick<BearState, "bears">) => void;
+  getState: () => BearState;
+};
+
+it("increments bears", () => {
   // TODO
 });`,
     solutionCode: `it("increments bears", () => {
