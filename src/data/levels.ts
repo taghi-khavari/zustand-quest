@@ -225,9 +225,10 @@ export const useBearStore = create<BearState>()((set) => ({
     estimatedMinutes: 5,
     conceptTags: ["get", "conditional actions"],
     learningObjectives: ["Read current state inside actions", "Use get with set"],
-    story: "The academy should welcome a new bear only when the pantry has food.",
-    mission: "Add addBearIfFoodAvailable using get() and set().",
-    explanation: "The store creator can receive both set and get. Use get when an action needs to inspect current state before deciding what to do.",
+    story: "The academy should welcome a new bear only when the pantry has food. Each new bear eats one food from the pantry.",
+    mission: "Implement addBearIfFoodAvailable so it does nothing when food is 0, otherwise adds 1 bear and subtracts 1 food.",
+    explanation:
+      "The store creator can receive both set and get. Use get() to decide whether the action should run at all, then use functional set to update bears and food from the current state.",
     starterCode: `${starterHeader}
 
 type BearState = {
@@ -257,7 +258,11 @@ export const useBearStore = create<BearState>()((set) => ({
         { id: "functional-update", description: "Use functional set for dependent updates", pattern: "set\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*bears\\s*:\\s*\\1\\.bears\\s*\\+\\s*1[\\s\\S]*food\\s*:\\s*\\1\\.food\\s*-\\s*1", points: 3 }
       ]
     },
-    hints: ["Change (set) to (set, get).", "Guard with get().food.", "Increment bears and decrement food in one functional set call."],
+    hints: [
+      "Change (set) to (set, get).",
+      "Use get().food before set: if there is no food, return without changing state.",
+      "Inside set, return both bears: state.bears + 1 and food: state.food - 1."
+    ],
     playgroundType: "counter",
     successMessage: "The pantry gate now protects the store."
   }),
