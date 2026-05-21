@@ -44,6 +44,13 @@ export interface ValidationCheck {
   id: string;
   description: string;
   message?: string;
+  required?: boolean;
+  rule?:
+    | "zustand-create-import"
+    | "bear-state-type"
+    | "bear-create-generic"
+    | "bear-functional-increment"
+    | "bear-reset-action";
   pattern?: string;
   requiredIncludes?: string[];
   forbiddenIncludes?: string[];

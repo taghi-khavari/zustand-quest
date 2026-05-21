@@ -9,3 +9,7 @@ export function normalizeCode(code: string) {
 export function compactCode(code: string) {
   return normalizeCode(code).replace(/\s+/g, " ");
 }
+
+export function denseCode(code: string) {
+  return normalizeCode(code).replace(/\s+/g, "");
+}

@@ -18,4 +18,81 @@ describe("validateCode", () => {
     expect(result.isCorrect).toBe(false);
     expect(result.failedChecks.some((check) => check.id === "resets-count")).toBe(true);
   });
+
+  it("accepts equivalent create/reset syntax but rejects out-of-scope bear increments", () => {
+    const level = levels[0];
+    const result = validateCode(
+      level,
+      `import { create } from "zustand";
+
+type BearState = {
+  bears: number;
+  increasePopulation: () => void;
+  removeAllBears: () => void;
+};
+
+export const useBearStore = create<BearState>((set) => ({
+  bears: 0,
+  increasePopulation: () => set({bears: bears + 1}),
+  removeAllBears: () => set({bears: 0})
+}))`
+    );
+
+    expect(result.isCorrect).toBe(false);
+    expect(result.passedChecks).toContain("imports-create");
+    expect(result.passedChecks).toContain("uses-create-generic");
+    expect(result.passedChecks).toContain("resets-count");
+    expect(result.failedChecks.map((check) => check.id)).toEqual(["uses-functional-set"]);
+    expect(result.failedChecks[0].message).toContain("bare variable bears is not in scope");
+  });
+
+  it("accepts core behavior even when level one omits the TypeScript generic", () => {
+    const level = levels[0];
+    const result = validateCode(
+      level,
+      `import { create } from 'zustand';
+
+type BearState = {
+  bears: number;
+  increasePopulation: () => void;
+  removeAllBears: () => void;
+};
+
+export const useBearStore = create((set) => ({
+  bears: 0,
+  increasePopulation: () => set((s) => ({ bears: s.bears + 1 })),
+  removeAllBears: () => set({bears:0})
+}))`
+    );
+
+    expect(result.isCorrect).toBe(true);
+    expect(result.passedChecks).toContain("imports-create");
+    expect(result.passedChecks).toContain("uses-functional-set");
+    expect(result.passedChecks).toContain("resets-count");
+    expect(result.failedChecks.map((check) => check.id)).toEqual(["uses-create-generic"]);
+    expect(result.score).toBeLessThan(100);
+  });
+
+  it("accepts a destructured functional increment in level one", () => {
+    const level = levels[0];
+    const result = validateCode(
+      level,
+      `import { create } from "zustand";
+
+type BearState = {
+  bears: number;
+  increasePopulation: () => void;
+  removeAllBears: () => void;
+};
+
+export const useBearStore = create<BearState>()((set) => ({
+  bears: 0,
+  increasePopulation: () => set(({ bears }) => ({ bears: bears + 1 })),
+  removeAllBears: () => set({ bears: 0 }),
+}));`
+    );
+
+    expect(result.isCorrect).toBe(true);
+    expect(result.failedChecks).toHaveLength(0);
+  });
 });

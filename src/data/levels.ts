@@ -56,10 +56,43 @@ export const useBearStore = create<BearState>()((set) => ({
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "imports-create", description: "Import create from zustand", requiredIncludes: ['import { create } from "zustand"'], points: 1 },
-        { id: "uses-create-generic", description: "Use create with the BearState type", pattern: "create\\s*<\\s*BearState\\s*>\\s*\\(\\s*\\)", points: 2 },
-        { id: "uses-functional-set", description: "Use functional set for increment", requiredIncludes: ["set((state) =>", "state.bears + 1"], points: 3 },
-        { id: "resets-count", description: "Reset bears without replacing actions", requiredIncludes: ["removeAllBears", "set({ bears: 0 })"], forbiddenIncludes: ["set({}, true)"], points: 2 }
+        {
+          id: "imports-create",
+          description: "Import create from zustand",
+          rule: "zustand-create-import",
+          points: 1
+        },
+        {
+          id: "defines-bear-state",
+          description: "Define the BearState type",
+          rule: "bear-state-type",
+          required: false,
+          message: "For full credit, BearState should type bears, increasePopulation, and removeAllBears.",
+          points: 1
+        },
+        {
+          id: "uses-create-generic",
+          description: "Use create with the BearState type",
+          rule: "bear-create-generic",
+          required: false,
+          message: "For full credit, pass BearState to create: create<BearState>(...) or create<BearState>()(...).",
+          points: 2
+        },
+        {
+          id: "uses-functional-set",
+          description: "Use previous state when incrementing bears",
+          rule: "bear-functional-increment",
+          message:
+            "The bare variable bears is not in scope inside the action. Use functional set, like set((state) => ({ bears: state.bears + 1 })).",
+          points: 3
+        },
+        {
+          id: "resets-count",
+          description: "Reset bears without replacing actions",
+          rule: "bear-reset-action",
+          message: "removeAllBears should call set({ bears: 0 }) without replace mode.",
+          points: 2
+        }
       ]
     },
     hints: ["Start with create<BearState>()(...).", "The creator receives set.", "Use set((state) => ({ bears: state.bears + 1 })) when the next value depends on the previous value."],

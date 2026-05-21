@@ -49,7 +49,6 @@ export function GameShell() {
   }, [level]);
 
   const isSolved = Boolean(result?.isCorrect || progress?.status === "completed");
-  const attempts = progress?.attempts ?? 0;
 
   const runCode = useCallback(() => {
     recordAttempt(level.id);
@@ -106,7 +105,6 @@ export function GameShell() {
             setSolutionShown(false);
           }}
           onShowSolution={showSolution}
-          canShowSolution={attempts >= 3}
         />
         <ResultPanel level={level} result={result} />
         <HintPanel level={level} visibleCount={visibleHints} onReveal={revealHint} />
@@ -124,7 +122,6 @@ export function GameShell() {
         onRun={runCode}
         onReset={() => setCode(level.starterCode)}
         onShowSolution={showSolution}
-        canShowSolution={attempts >= 3}
       />
     ),
     result: (

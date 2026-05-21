@@ -33,15 +33,21 @@ export function ResultPanel({ level, result }: { level: Level; result?: Validati
           {level.validation.checks.map((check) => {
             const passed = result.passedChecks.includes(check.id);
             const failed = result.failedChecks.find((item) => item.id === check.id);
+            const isOptional = check.required === false;
             return (
               <div key={check.id} className="flex gap-2 rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-800">
                 {passed ? (
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-moss-600" aria-hidden />
+                ) : isOptional ? (
+                  <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden />
                 ) : (
                   <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" aria-hidden />
                 )}
                 <div>
-                  <p className="font-semibold">{check.description}</p>
+                  <p className="font-semibold">
+                    {check.description}
+                    {isOptional && <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">(bonus)</span>}
+                  </p>
                   {!passed && <p className="text-xs text-slate-500 dark:text-slate-400">{failed?.message}</p>}
                 </div>
               </div>

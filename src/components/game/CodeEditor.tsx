@@ -25,15 +25,13 @@ export function CodeEditor({
   onChange,
   onRun,
   onReset,
-  onShowSolution,
-  canShowSolution
+  onShowSolution
 }: {
   code: string;
   onChange: (code: string) => void;
   onRun: () => void;
   onReset: () => void;
   onShowSolution: () => void;
-  canShowSolution: boolean;
 }) {
   const fontSize = useSettingsStore((state) => state.editorFontSize);
   const [formatError, setFormatError] = useState<string | null>(null);
@@ -76,11 +74,17 @@ export function CodeEditor({
               <RotateCcw className="h-4 w-4" aria-hidden />
               Reset
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={onShowSolution} disabled={!canShowSolution}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={onShowSolution}
+              title="Show the solution. Running it after this gives at most 1 star."
+            >
               <Wand2 className="h-4 w-4" aria-hidden />
               Solution
             </Button>
-            <Button type="button" size="sm" onClick={onRun}>
+            <Button type="button" size="sm" onClick={onRun} className="font-black">
               <Play className="h-4 w-4" aria-hidden />
               Run
             </Button>
