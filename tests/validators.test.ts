@@ -171,6 +171,49 @@ export const useBearStore = create<BearState>()((set) => ({
     expect(result.failedChecks.map((check) => check.id)).toEqual(["imports-create", "creates-store"]);
   });
 
+  it("requires the optimistic cart action to live inside a Zustand store", () => {
+    const result = validateCode(
+      levels[13],
+      `addItemOptimistic: async (item) => {
+  const previousItems = get().items;
+  set((state) => ({ items: [...state.items, item] }));
+  try {
+    await saveItem(item);
+  } catch {
+    set({ items: previousItems });
+  }
+}`
+    );
+
+    expect(result.isCorrect).toBe(false);
+    expect(result.failedChecks.map((check) => check.id)).toEqual(["imports-create", "creates-store"]);
+  });
+
+  it("requires partial persistence to live inside a persisted Zustand store", () => {
+    const result = validateCode(
+      levels[16],
+      `persist(
+  (set) => ({
+    theme: "dark",
+    modalOpen: false,
+    setTheme: (theme) => set({ theme }),
+    setModalOpen: (modalOpen) => set({ modalOpen })
+  }),
+  {
+    name: "settings",
+    partialize: (state) => ({ theme: state.theme })
+  }
+)`
+    );
+
+    expect(result.isCorrect).toBe(false);
+    expect(result.failedChecks.map((check) => check.id)).toEqual([
+      "imports-create",
+      "imports-persist",
+      "creates-persisted-store"
+    ]);
+  });
+
   it("reports the specific wrong field in level five dependent updates", () => {
     const result = validateCode(
       levels[4],

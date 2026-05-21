@@ -634,37 +634,55 @@ export const useFishMarketStore = create<FishMarketState>()((set) => ({
     story: "The cart should feel instant, but failed saves need a clean recovery path.",
     mission: "Add item optimistically and rollback on failure.",
     explanation: "Optimistic UI updates client state first, then restores a previous snapshot if the server request fails.",
-    starterCode: `type Product = { id: string; name: string; price: number };
+    starterCode: `import { create } from "zustand";
+
+type Product = { id: string; name: string; price: number };
 type CartState = {
   items: Product[];
   addItemOptimistic: (item: Product) => Promise<void>;
 };
 
-declare const get: () => CartState;
-declare const set: (nextState: Partial<CartState> | ((state: CartState) => Partial<CartState>)) => void;
 declare const saveItem: (item: Product) => Promise<void>;
 
-addItemOptimistic: async (item) => {
-  // TODO
-}`,
-    solutionCode: `addItemOptimistic: async (item) => {
-  const previousItems = get().items;
-  set((state) => ({ items: [...state.items, item] }));
-  try {
-    await saveItem(item);
-  } catch {
-    set({ items: previousItems });
-  }
-}`,
+export const useCartStore = create<CartState>()((set, get) => ({
+  items: [],
+  addItemOptimistic: async (item) => {
+    // TODO
+  },
+}));`,
+    solutionCode: `import { create } from "zustand";
+
+type Product = { id: string; name: string; price: number };
+type CartState = {
+  items: Product[];
+  addItemOptimistic: (item: Product) => Promise<void>;
+};
+
+declare const saveItem: (item: Product) => Promise<void>;
+
+export const useCartStore = create<CartState>()((set, get) => ({
+  items: [],
+  addItemOptimistic: async (item) => {
+    const previousItems = get().items;
+    set((state) => ({ items: [...state.items, item] }));
+    try {
+      await saveItem(item);
+    } catch {
+      set({ items: previousItems });
+    }
+  },
+}));`,
     validation: {
       type: "multiCheck",
       checks: [
+        { id: "imports-create", description: "Import create from Zustand", rule: "zustand-create-import", points: 1 },
+        { id: "creates-store", description: "Create a CartState store with set and get", pattern: "create\\s*<\\s*CartState\\s*>\\s*(?:\\(\\s*\\)\\s*)?\\(\\s*\\(?\\s*set\\s*,\\s*get\\s*\\)?\\s*=>\\s*\\(\\s*\\{[\\s\\S]*addItemOptimistic\\s*:", points: 1 },
         { id: "snapshot", description: "Save previous items", pattern: "const\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*[A-Za-z_$][\\w$]*\\s*\\(\\s*\\)\\.items\\b", points: 3 },
         { id: "optimistic-first", description: "Set optimistic state before await", pattern: "addItemOptimistic\\s*:\\s*async\\s*\\(?\\s*([A-Za-z_$][\\w$]*)[\\s\\S]*?set\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*items\\s*:\\s*\\[\\s*\\.\\.\\.\\s*\\2\\.items\\s*,\\s*\\1\\s*\\][\\s\\S]*await", points: 3 },
         { id: "rollback", description: "Rollback in catch", pattern: "catch[\\s\\S]*set\\s*\\(\\s*\\{\\s*items\\s*:\\s*[A-Za-z_$][\\w$]*\\s*\\}\\s*\\)", points: 3 }
       ]
     },
-    hints: ["Take a snapshot before the optimistic set.", "Update local state before await saveItem.", "Catch failure and set items back to previousItems."],
+    hints: ["Keep addItemOptimistic inside the object returned from create.", "Take a snapshot before the optimistic set.", "Update local state before await saveItem.", "Catch failure and set items back to previousItems."],
     playgroundType: "async",
     successMessage: "The optimistic flow has a rollback rope."
   }),
@@ -763,35 +781,66 @@ export const useSettingsStore = create<SettingsState>()(
     story: "The cave is keeping modal state it should forget.",
     mission: "Persist only theme, not temporary modal state.",
     explanation: "partialize lets you store a subset of state. This keeps localStorage small and avoids stale UI surprises.",
-    starterCode: `type SettingsState = {
+    starterCode: `${starterHeader}
+import { persist } from "zustand/middleware";
+
+type SettingsState = {
   theme: "dark" | "light";
   modalOpen: boolean;
   setTheme: (theme: SettingsState["theme"]) => void;
   setModalOpen: (modalOpen: boolean) => void;
 };
 
-persist(
-  (set) => ({
-    theme: "dark",
-    modalOpen: false,
-    setTheme: (theme) => set({ theme }),
-    setModalOpen: (modalOpen) => set({ modalOpen })
-  }),
-  {
-    name: "settings",
-    // TODO
-  }
-)`,
-    solutionCode: `partialize: (state) => ({ theme: state.theme })`,
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      theme: "dark",
+      modalOpen: false,
+      setTheme: (theme) => set({ theme }),
+      setModalOpen: (modalOpen) => set({ modalOpen })
+    }),
+    {
+      name: "settings",
+      // TODO
+    }
+  )
+);`,
+    solutionCode: `import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+type SettingsState = {
+  theme: "dark" | "light";
+  modalOpen: boolean;
+  setTheme: (theme: SettingsState["theme"]) => void;
+  setModalOpen: (modalOpen: boolean) => void;
+};
+
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      theme: "dark",
+      modalOpen: false,
+      setTheme: (theme) => set({ theme }),
+      setModalOpen: (modalOpen) => set({ modalOpen })
+    }),
+    {
+      name: "settings",
+      partialize: (state) => ({ theme: state.theme })
+    }
+  )
+);`,
     validation: {
       type: "multiCheck",
       checks: [
+        { id: "imports-create", description: "Import create from Zustand", rule: "zustand-create-import", points: 1 },
+        { id: "imports-persist", description: "Import persist", pattern: "import\\s*\\{\\s*[^}]*\\bpersist\\b[^}]*\\}\\s*from\\s*[\"']zustand/middleware[\"']", points: 1 },
+        { id: "creates-persisted-store", description: "Create a SettingsState store with persist", pattern: "create\\s*<\\s*SettingsState\\s*>\\s*(?:\\(\\s*\\)\\s*)?\\([\\s\\S]*persist\\s*\\(", points: 1 },
         { id: "uses-partialize", description: "Use partialize", requiredIncludes: ["partialize:"], points: 3 },
         { id: "keeps-theme", description: "Persist theme", pattern: "partialize\\s*:\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*theme\\s*:\\s*\\1\\.theme", points: 3 },
         { id: "excludes-modal", description: "Do not persist modalOpen", forbiddenPattern: "modalOpen\\s*:\\s*[A-Za-z_$][\\w$]*\\.modalOpen", points: 2 }
       ]
     },
-    hints: ["partialize receives state.", "Return an object with theme only.", "Temporary modal state should reset on refresh."],
+    hints: ["Keep partialize inside the persist options passed to create.", "partialize receives state.", "Return an object with theme only.", "Temporary modal state should reset on refresh."],
     playgroundType: "persist",
     successMessage: "The cave remembers the theme and forgets the modal."
   }),
@@ -954,28 +1003,48 @@ export const useAppStore = create<StoreState>()((...a) => ({
     story: "A non-React service needs to update state, while components still subscribe normally.",
     mission: "Create a vanilla store with createStore and bind it with useStore.",
     explanation: "Vanilla stores are useful for code that lives outside React, such as services, workers, or integration modules.",
-    starterCode: `type PositionState = {
+    starterCode: `import { useStore } from "zustand";
+import { createStore } from "zustand/vanilla";
+
+type PositionState = {
   x: number;
   setX: (x: number) => void;
 };
 
-// TODO: import createStore and useStore, then create a vanilla store and read x in React`,
+export const positionStore = createStore<PositionState>()((set) => ({
+  // TODO
+}));
+
+function PositionReadout() {
+  const x = useStore(positionStore, (state) => {
+    // TODO
+  });
+  return <span>{x}</span>;
+}`,
     solutionCode: `import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 
-const positionStore = createStore<PositionState>()((set) => ({
+type PositionState = {
+  x: number;
+  setX: (x: number) => void;
+};
+
+export const positionStore = createStore<PositionState>()((set) => ({
   x: 0,
   setX: (x) => set({ x })
 }));
 
-const x = useStore(positionStore, (state) => state.x);`,
+function PositionReadout() {
+  const x = useStore(positionStore, (state) => state.x);
+  return <span>{x}</span>;
+}`,
     validation: {
       type: "multiCheck",
       checks: [
         { id: "imports-create-store", description: "Import createStore", pattern: "import\\s*\\{\\s*[^}]*\\bcreateStore\\b[^}]*\\}\\s*from\\s*[\"']zustand/vanilla[\"']", points: 2 },
         { id: "imports-use-store", description: "Import useStore", pattern: "import\\s*\\{\\s*[^}]*\\buseStore\\b[^}]*\\}\\s*from\\s*[\"']zustand[\"']", points: 2 },
-        { id: "creates-vanilla", description: "Create a vanilla store", requiredIncludes: ["createStore"], points: 2 },
-        { id: "binds-react", description: "Bind vanilla store with useStore", pattern: "useStore\\s*\\(\\s*\\w+Store\\s*,\\s*\\(?\\s*[A-Za-z_$][\\w$]*", points: 3 }
+        { id: "creates-vanilla", description: "Create a vanilla store", pattern: "createStore\\s*<\\s*PositionState\\s*>\\s*(?:\\(\\s*\\)\\s*)?\\(\\s*\\(?\\s*set\\s*\\)?\\s*=>\\s*\\(\\s*\\{[\\s\\S]*setX\\s*:", points: 2 },
+        { id: "binds-react", description: "Bind vanilla store with useStore", pattern: "useStore\\s*\\(\\s*\\w+Store\\s*,\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*\\1\\.x", points: 3 }
       ]
     },
     hints: ["createStore comes from zustand/vanilla.", "React components use useStore(store, selector).", "A service can call positionStore.setState outside React."],
