@@ -63,7 +63,7 @@ export function CodeEditor({
   };
 
   return (
-    <Card className="h-full overflow-hidden">
+    <Card className="overflow-hidden">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-black">Code</h2>
@@ -88,7 +88,7 @@ export function CodeEditor({
         </div>
         {formatError && <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-300">{formatError}</p>}
       </CardHeader>
-      <CardContent className="h-[32rem] p-0">
+      <CardContent className="h-[clamp(20rem,50vh,30rem)] p-0">
         <RichCodeEditor code={code} fontSize={fontSize} onChange={onChange} />
       </CardContent>
     </Card>

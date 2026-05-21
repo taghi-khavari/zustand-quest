@@ -87,7 +87,7 @@ export function GameShell() {
   };
 
   const desktop = (
-    <div className="grid gap-4 xl:grid-cols-[17rem_minmax(0,1fr)_minmax(25rem,32rem)]">
+    <div className="grid items-start gap-4 xl:grid-cols-[17rem_minmax(0,1fr)_minmax(25rem,32rem)]">
       <div className="hidden xl:block">
         <LevelSelector />
       </div>
@@ -95,7 +95,7 @@ export function GameShell() {
         <LessonPanel level={level} />
         <Playground level={level} userCode={code} validationResult={result} isSolved={isSolved} />
       </div>
-      <div className="space-y-4">
+      <div className="space-y-4 self-start">
         <CodeEditor
           code={code}
           onChange={setCode}
