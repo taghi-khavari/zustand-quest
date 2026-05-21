@@ -52,6 +52,7 @@ export interface ValidationCheck {
     | "bear-functional-increment"
     | "bear-reset-action";
   pattern?: string;
+  forbiddenPattern?: string;
   requiredIncludes?: string[];
   forbiddenIncludes?: string[];
   points: number;

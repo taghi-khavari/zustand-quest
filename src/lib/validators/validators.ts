@@ -74,7 +74,12 @@ function runCheck(check: ValidationCheck, code: CodeForms) {
     patternOk = new RegExp(check.pattern, "ims").test(code.normalized);
   }
 
-  return ruleOk && includesOk && forbiddenOk && patternOk;
+  let forbiddenPatternOk = true;
+  if (check.forbiddenPattern) {
+    forbiddenPatternOk = !new RegExp(check.forbiddenPattern, "ims").test(code.normalized);
+  }
+
+  return ruleOk && includesOk && forbiddenOk && patternOk && forbiddenPatternOk;
 }
 
 export function validateCode(level: Level, userCode: string): ValidationResult {

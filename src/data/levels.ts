@@ -122,8 +122,8 @@ export const useBearStore = create<BearState>()((set) => ({
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "uses-selector", description: "Use a selector callback", pattern: "useBearStore\\s*\\(\\s*\\(?\\s*state\\s*\\)?\\s*=>", points: 3 },
-        { id: "selects-bears", description: "Select state.bears", requiredIncludes: ["state.bears"], points: 3 },
+        { id: "uses-selector", description: "Use a selector callback", pattern: "useBearStore\\s*\\(\\s*\\(?\\s*[A-Za-z_$][\\w$]*\\s*\\)?\\s*=>", points: 3 },
+        { id: "selects-bears", description: "Select bears from state", pattern: "=>\\s*[A-Za-z_$][\\w$]*\\.bears\\b", points: 3 },
         { id: "no-full-store", description: "Do not subscribe to the whole store", forbiddenIncludes: ["useBearStore()"], points: 2 }
       ]
     },
@@ -154,7 +154,7 @@ export const useBearStore = create<BearState>()((set) => ({
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "select-action", description: "Select the action from the store", requiredIncludes: ["useBearStore((state) => state.increasePopulation)"], points: 4 },
+        { id: "select-action", description: "Select the action from the store", pattern: "useBearStore\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>\\s*\\1\\.increasePopulation\\b", points: 4 },
         { id: "wire-click", description: "Wire the action to onClick", requiredIncludes: ["onClick={increasePopulation}"], points: 3 }
       ]
     },
@@ -190,8 +190,8 @@ export const useBearStore = create<BearState>()((set) => ({
       type: "multiCheck",
       checks: [
         { id: "has-action", description: "Define renameBear as an action", requiredIncludes: ["renameBear"], points: 2 },
-        { id: "sets-name", description: "Use set with the new name", pattern: "set\\s*\\(\\s*\\{\\s*name\\s*:\\s*newName\\s*\\}\\s*\\)", points: 4 },
-        { id: "no-replace", description: "Do not replace the whole store", forbiddenIncludes: ["true)"], points: 1 }
+        { id: "sets-name", description: "Use set with the new name", pattern: "renameBear\\s*:\\s*\\(?\\s*([A-Za-z_$][\\w$]*)[\\s\\S]*?set\\s*\\(\\s*\\{\\s*name\\s*:\\s*\\1\\s*\\}\\s*\\)", points: 4 },
+        { id: "no-replace", description: "Do not replace the whole store", forbiddenPattern: "set\\s*\\([\\s\\S]*?,\\s*true\\s*\\)", points: 1 }
       ]
     },
     hints: ["set({ name: newName }) is enough.", "Zustand merges the partial object.", "Use replace mode only deliberately."],
@@ -232,9 +232,9 @@ export const useBearStore = create<BearState>()((set) => ({
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "uses-get-param", description: "Receive get in the store creator", requiredIncludes: ["(set, get)"], points: 2 },
-        { id: "reads-food", description: "Read food with get()", requiredIncludes: ["get().food"], points: 3 },
-        { id: "functional-update", description: "Use functional set for dependent updates", requiredIncludes: ["set((state) =>", "state.bears + 1"], points: 3 }
+        { id: "uses-get-param", description: "Receive get in the store creator", pattern: "\\(\\s*\\(?\\s*[A-Za-z_$][\\w$]*\\s*,\\s*[A-Za-z_$][\\w$]*\\s*\\)?\\s*=>", points: 2 },
+        { id: "reads-food", description: "Read food with get()", pattern: "[A-Za-z_$][\\w$]*\\s*\\(\\s*\\)\\.food\\b", points: 3 },
+        { id: "functional-update", description: "Use functional set for dependent updates", pattern: "set\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*bears\\s*:\\s*\\1\\.bears\\s*\\+\\s*1[\\s\\S]*food\\s*:\\s*\\1\\.food\\s*-\\s*1", points: 3 }
       ]
     },
     hints: ["Change (set) to (set, get).", "Guard with get().food.", "Increment bears and decrement food in one functional set call."],
@@ -265,8 +265,8 @@ export const useCartStore = create<CartState>()((set) => ({
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "functional-set", description: "Use functional set", requiredIncludes: ["set((state) =>"], points: 3 },
-        { id: "spread-items", description: "Append with array spread", requiredIncludes: ["items: [...state.items, product]"], points: 4 }
+        { id: "functional-set", description: "Use functional set", pattern: "set\\s*\\(\\s*\\(?\\s*[A-Za-z_$][\\w$]*\\s*\\)?\\s*=>", points: 3 },
+        { id: "spread-items", description: "Append with array spread", pattern: "addToCart\\s*:\\s*\\(?\\s*([A-Za-z_$][\\w$]*)[\\s\\S]*?set\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*items\\s*:\\s*\\[\\s*\\.\\.\\.\\s*\\2\\.items\\s*,\\s*\\1\\s*\\]", points: 4 }
       ]
     },
     hints: ["The next array depends on the previous array.", "Use [...state.items, product].", "Return a partial state object from set."],
@@ -296,8 +296,8 @@ removeItem: // TODO`,
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "uses-filter", description: "Use filter for removal", requiredIncludes: ["state.items.filter"], points: 3 },
-        { id: "compares-id", description: "Compare item.id to id", requiredIncludes: ["item.id !== id"], points: 3 },
+        { id: "uses-filter", description: "Use filter for removal", pattern: "[A-Za-z_$][\\w$]*\\.items\\.filter\\s*\\(", points: 3 },
+        { id: "compares-id", description: "Compare item.id to id", pattern: "removeItem\\s*:\\s*\\(?\\s*([A-Za-z_$][\\w$]*)[\\s\\S]*?filter\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>\\s*\\2\\.id\\s*!==\\s*\\1", points: 3 },
         { id: "updates-items", description: "Return items from set", requiredIncludes: ["items:"], points: 1 }
       ]
     },
@@ -329,7 +329,7 @@ export const useCartStore = create<CartState>()((set) => ({
       checks: [
         { id: "has-initial", description: "Keep an initialState object", requiredIncludes: ["initialState"], points: 2 },
         { id: "sets-initial", description: "Reset with set(initialState)", requiredIncludes: ["set(initialState)"], points: 4 },
-        { id: "avoid-replace", description: "Do not use replace mode for this reset", forbiddenIncludes: ["set({}, true)", "set(initialState, true)"], points: 2 }
+        { id: "avoid-replace", description: "Do not use replace mode for this reset", forbiddenPattern: "set\\s*\\([\\s\\S]*?,\\s*true\\s*\\)", points: 2 }
       ]
     },
     hints: ["Keep initial state separate from actions.", "reset can be one line.", "Avoid replace mode unless you really want to replace actions too."],
@@ -359,7 +359,7 @@ export const useCartStore = create<CartState>()((set) => ({
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "selects-field", description: "Select selectedField", requiredIncludes: ["state.selectedField"], points: 4 },
+        { id: "selects-field", description: "Select selectedField", pattern: "useDashboardStore\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>\\s*\\1\\.selectedField\\b", points: 4 },
         { id: "no-full-store", description: "Remove the full-store subscription", forbiddenIncludes: ["useDashboardStore()"], points: 4 }
       ]
     },
@@ -391,9 +391,9 @@ function Pantry() {
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "imports-use-shallow", description: "Import useShallow", requiredIncludes: ['import { useShallow } from "zustand/react/shallow"'], points: 2 },
-        { id: "wraps-selector", description: "Wrap the selector in useShallow", requiredIncludes: ["useBearStore(", "useShallow((state) =>"], points: 3 },
-        { id: "selects-two", description: "Select nuts and honey", requiredIncludes: ["nuts: state.nuts", "honey: state.honey"], points: 3 }
+        { id: "imports-use-shallow", description: "Import useShallow", pattern: "import\\s*\\{\\s*[^}]*\\buseShallow\\b[^}]*\\}\\s*from\\s*[\"']zustand/react/shallow[\"']", points: 2 },
+        { id: "wraps-selector", description: "Wrap the selector in useShallow", pattern: "useBearStore\\s*\\([\\s\\S]*useShallow\\s*\\(", points: 3 },
+        { id: "selects-two", description: "Select nuts and honey", pattern: "useShallow\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*nuts\\s*:\\s*\\1\\.nuts[\\s\\S]*honey\\s*:\\s*\\1\\.honey", points: 3 }
       ]
     },
     hints: ["Import useShallow from zustand/react/shallow.", "Pass useShallow(selector) into the store hook.", "Return an object with nuts and honey."],
@@ -422,9 +422,9 @@ function Pantry() {
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "uses-cart-selector", description: "Use a cart selector", requiredIncludes: ["useCartStore((state) =>"], points: 2 },
-        { id: "uses-reduce", description: "Reduce items into a total", requiredIncludes: ["state.items.reduce"], points: 3 },
-        { id: "quantity-price", description: "Multiply price and quantity", requiredIncludes: ["item.price * item.quantity"], points: 3 }
+        { id: "uses-cart-selector", description: "Use a cart selector", pattern: "useCartStore\\s*\\(\\s*\\(?\\s*[A-Za-z_$][\\w$]*\\s*\\)?\\s*=>", points: 2 },
+        { id: "uses-reduce", description: "Reduce items into a total", pattern: "[A-Za-z_$][\\w$]*\\.items\\.reduce\\s*\\(", points: 3 },
+        { id: "quantity-price", description: "Multiply price and quantity", pattern: "([A-Za-z_$][\\w$]*)\\.price\\s*\\*\\s*\\1\\.quantity", points: 3 }
       ]
     },
     hints: ["The total belongs to a selector.", "Use reduce over state.items.", "Each line item contributes price * quantity."],
@@ -453,7 +453,7 @@ export const useCartTotal = () =>
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "items-hook", description: "Export useCartItems", requiredIncludes: ["export const useCartItems", "state.items"], points: 3 },
+        { id: "items-hook", description: "Export useCartItems", pattern: "export\\s+const\\s+useCartItems[\\s\\S]*?useCartStore\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>\\s*\\1\\.items\\b", points: 3 },
         { id: "total-hook", description: "Export useCartTotal", requiredIncludes: ["export const useCartTotal", "reduce"], points: 3 },
         { id: "uses-store", description: "Both hooks use the cart store", requiredIncludes: ["useCartStore"], points: 2 }
       ]
@@ -490,9 +490,9 @@ export const useCartTotal = () =>
       type: "multiCheck",
       checks: [
         { id: "async-action", description: "Use an async action", requiredIncludes: ["async"], points: 2 },
-        { id: "loading", description: "Set loading before awaiting", requiredIncludes: ['set({ status: "loading" })'], points: 2 },
+        { id: "loading", description: "Set loading before awaiting", pattern: "set\\s*\\(\\s*\\{\\s*status\\s*:\\s*[\"']loading[\"']\\s*\\}\\s*\\)", points: 2 },
         { id: "awaits-fetch", description: "Await mockFetchFish", requiredIncludes: ["await mockFetchFish()"], points: 2 },
-        { id: "handles-error", description: "Handle errors", requiredIncludes: ["catch", 'set({ status: "error" })'], points: 2 }
+        { id: "handles-error", description: "Handle errors", pattern: "catch[\\s\\S]*set\\s*\\(\\s*\\{\\s*status\\s*:\\s*[\"']error[\"']\\s*\\}\\s*\\)", points: 2 }
       ]
     },
     hints: ["Set status to loading first.", "Wrap await mockFetchFish() in try/catch.", "Set success with the fish payload, and error in catch."],
@@ -526,9 +526,9 @@ export const useCartTotal = () =>
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "snapshot", description: "Save previous items", requiredIncludes: ["previousItems", "get().items"], points: 3 },
-        { id: "optimistic-first", description: "Set optimistic state before await", requiredIncludes: ["set((state) =>", "[...state.items, item]"], points: 3 },
-        { id: "rollback", description: "Rollback in catch", requiredIncludes: ["catch", "set({ items: previousItems })"], points: 3 }
+        { id: "snapshot", description: "Save previous items", pattern: "const\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*[A-Za-z_$][\\w$]*\\s*\\(\\s*\\)\\.items\\b", points: 3 },
+        { id: "optimistic-first", description: "Set optimistic state before await", pattern: "addItemOptimistic\\s*:\\s*async\\s*\\(?\\s*([A-Za-z_$][\\w$]*)[\\s\\S]*?set\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*items\\s*:\\s*\\[\\s*\\.\\.\\.\\s*\\2\\.items\\s*,\\s*\\1\\s*\\][\\s\\S]*await", points: 3 },
+        { id: "rollback", description: "Rollback in catch", pattern: "catch[\\s\\S]*set\\s*\\(\\s*\\{\\s*items\\s*:\\s*[A-Za-z_$][\\w$]*\\s*\\}\\s*\\)", points: 3 }
       ]
     },
     hints: ["Take a snapshot before the optimistic set.", "Update local state before await saveItem.", "Catch failure and set items back to previousItems."],
@@ -598,7 +598,7 @@ export const useSettingsStore = create<SettingsState>()(
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "imports-persist", description: "Import persist", requiredIncludes: ['import { persist } from "zustand/middleware"'], points: 2 },
+        { id: "imports-persist", description: "Import persist", pattern: "import\\s*\\{\\s*[^}]*\\bpersist\\b[^}]*\\}\\s*from\\s*[\"']zustand/middleware[\"']", points: 2 },
         { id: "wraps-persist", description: "Wrap the creator with persist", requiredIncludes: ["persist("], points: 3 },
         { id: "has-name", description: "Set a storage name", pattern: "name\\s*:\\s*[\"'][\\w-]+[\"']", points: 3 }
       ]
@@ -636,8 +636,8 @@ export const useSettingsStore = create<SettingsState>()(
       type: "multiCheck",
       checks: [
         { id: "uses-partialize", description: "Use partialize", requiredIncludes: ["partialize:"], points: 3 },
-        { id: "keeps-theme", description: "Persist theme", requiredIncludes: ["theme: state.theme"], points: 3 },
-        { id: "excludes-modal", description: "Do not persist modalOpen", forbiddenIncludes: ["modalOpen: state.modalOpen"], points: 2 }
+        { id: "keeps-theme", description: "Persist theme", pattern: "partialize\\s*:\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*theme\\s*:\\s*\\1\\.theme", points: 3 },
+        { id: "excludes-modal", description: "Do not persist modalOpen", forbiddenPattern: "modalOpen\\s*:\\s*[A-Za-z_$][\\w$]*\\.modalOpen", points: 2 }
       ]
     },
     hints: ["partialize receives state.", "Return an object with theme only.", "Temporary modal state should reset on refresh."],
@@ -671,9 +671,9 @@ export const useCartStore = create<CartState>()(
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "imports-devtools", description: "Import devtools", requiredIncludes: ['import { devtools } from "zustand/middleware"'], points: 2 },
+        { id: "imports-devtools", description: "Import devtools", pattern: "import\\s*\\{\\s*[^}]*\\bdevtools\\b[^}]*\\}\\s*from\\s*[\"']zustand/middleware[\"']", points: 2 },
         { id: "wraps-devtools", description: "Wrap with devtools", requiredIncludes: ["devtools("], points: 3 },
-        { id: "named-action", description: "Name the set action", requiredIncludes: ['false, "cart/addItem"'], points: 4 }
+        { id: "named-action", description: "Name the set action", pattern: "set\\s*\\([\\s\\S]*,\\s*false\\s*,\\s*[\"']cart/addItem[\"']\\s*\\)", points: 4 }
       ]
     },
     hints: ["devtools wraps the creator like persist does.", "The third set argument can be an action name.", "Use names like cart/addItem."],
@@ -709,9 +709,9 @@ export const useForestStore = create<ForestState>()(
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "imports-immer", description: "Import immer middleware", requiredIncludes: ['import { immer } from "zustand/middleware/immer"'], points: 2 },
-        { id: "wraps-immer", description: "Wrap store creator with immer", requiredIncludes: ["immer((set) =>"], points: 3 },
-        { id: "mutates-draft", description: "Use draft mutation for nested state", requiredIncludes: ["state.forest.tree.nest.items = []"], points: 4 }
+        { id: "imports-immer", description: "Import immer middleware", pattern: "import\\s*\\{\\s*[^}]*\\bimmer\\b[^}]*\\}\\s*from\\s*[\"']zustand/middleware/immer[\"']", points: 2 },
+        { id: "wraps-immer", description: "Wrap store creator with immer", pattern: "immer\\s*\\(\\s*\\(?\\s*[A-Za-z_$][\\w$]*\\s*\\)?\\s*=>", points: 3 },
+        { id: "mutates-draft", description: "Use draft mutation for nested state", pattern: "([A-Za-z_$][\\w$]*)\\.forest\\.tree\\.nest\\.items\\s*=\\s*\\[\\s*\\]", points: 4 }
       ]
     },
     hints: ["Import immer from zustand/middleware/immer.", "Wrap the creator with immer(...).", "Inside set, mutate the draft state."],
@@ -739,7 +739,12 @@ const createUiSlice = // TODO
 export const useAppStore = create<StoreState>()((...a) => ({
   // TODO
 }));`,
-    solutionCode: `const createCartSlice: StateCreator<StoreState, [], [], CartSlice> = (set) => ({ items: [] });
+    solutionCode: `type CartSlice = { items: Product[] };
+type UserSlice = { user: User | null };
+type UiSlice = { modalOpen: boolean };
+type StoreState = CartSlice & UserSlice & UiSlice;
+
+const createCartSlice: StateCreator<StoreState, [], [], CartSlice> = (set) => ({ items: [] });
 const createUserSlice: StateCreator<StoreState, [], [], UserSlice> = (set) => ({ user: null });
 const createUiSlice: StateCreator<StoreState, [], [], UiSlice> = (set) => ({ modalOpen: false });
 
@@ -753,7 +758,7 @@ export const useAppStore = create<StoreState>()((...a) => ({
       checks: [
         { id: "slice-types", description: "Define the slice types", requiredIncludes: ["type CartSlice", "type UserSlice", "type UiSlice"], points: 2 },
         { id: "state-creator", description: "Use StateCreator for slice creators", requiredIncludes: ["StateCreator<StoreState"], points: 3 },
-        { id: "composes-slices", description: "Spread each slice into the store", requiredIncludes: ["...createCartSlice(...a)", "...createUserSlice(...a)", "...createUiSlice(...a)"], points: 4 }
+        { id: "composes-slices", description: "Spread each slice into the store", pattern: "\\.\\.\\.createCartSlice\\s*\\(\\s*\\.\\.\\.[A-Za-z_$][\\w$]*\\s*\\)[\\s\\S]*\\.\\.\\.createUserSlice\\s*\\(\\s*\\.\\.\\.[A-Za-z_$][\\w$]*\\s*\\)[\\s\\S]*\\.\\.\\.createUiSlice\\s*\\(\\s*\\.\\.\\.[A-Za-z_$][\\w$]*\\s*\\)", points: 4 }
       ]
     },
     hints: ["StoreState is an intersection of slices.", "Each slice creator can be typed with StateCreator.", "The root create call spreads each slice creator with ...a."],
@@ -785,10 +790,10 @@ const x = useStore(positionStore, (state) => state.x);`,
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "imports-create-store", description: "Import createStore", requiredIncludes: ['import { createStore } from "zustand/vanilla"'], points: 2 },
-        { id: "imports-use-store", description: "Import useStore", requiredIncludes: ['import { useStore } from "zustand"'], points: 2 },
+        { id: "imports-create-store", description: "Import createStore", pattern: "import\\s*\\{\\s*[^}]*\\bcreateStore\\b[^}]*\\}\\s*from\\s*[\"']zustand/vanilla[\"']", points: 2 },
+        { id: "imports-use-store", description: "Import useStore", pattern: "import\\s*\\{\\s*[^}]*\\buseStore\\b[^}]*\\}\\s*from\\s*[\"']zustand[\"']", points: 2 },
         { id: "creates-vanilla", description: "Create a vanilla store", requiredIncludes: ["createStore"], points: 2 },
-        { id: "binds-react", description: "Bind vanilla store with useStore", pattern: "useStore\\s*\\(\\s*\\w+Store\\s*,\\s*\\(?\\s*state", points: 3 }
+        { id: "binds-react", description: "Bind vanilla store with useStore", pattern: "useStore\\s*\\(\\s*\\w+Store\\s*,\\s*\\(?\\s*[A-Za-z_$][\\w$]*", points: 3 }
       ]
     },
     hints: ["createStore comes from zustand/vanilla.", "React components use useStore(store, selector).", "A service can call positionStore.setState outside React."],
@@ -817,9 +822,9 @@ const x = useStore(positionStore, (state) => state.x);`,
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "uses-effect", description: "Use useEffect", requiredIncludes: ["useEffect(() =>"], points: 2 },
+        { id: "uses-effect", description: "Use useEffect", pattern: "useEffect\\s*\\(\\s*\\(\\s*\\)\\s*=>", points: 2 },
         { id: "subscribes", description: "Subscribe to store changes", requiredIncludes: [".subscribe("], points: 3 },
-        { id: "cleans-up", description: "Return unsubscribe", requiredIncludes: ["return unsubscribe"], points: 3 }
+        { id: "cleans-up", description: "Return unsubscribe", pattern: "const\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*[\\s\\S]*?\\.subscribe\\s*\\([\\s\\S]*?return\\s+\\1", points: 3 }
       ]
     },
     hints: ["Imperative subscriptions belong in an effect.", "Capture the return value from subscribe.", "Return it from useEffect for cleanup."],
@@ -858,7 +863,7 @@ function ThemeLabel() {
     validation: {
       type: "multiCheck",
       checks: [
-        { id: "client-boundary", description: "Use a client component boundary", requiredIncludes: ['"use client"'], points: 2 },
+        { id: "client-boundary", description: "Use a client component boundary", pattern: "[\"']use client[\"']", points: 2 },
         { id: "hydrated-flag", description: "Track hydration or mounted state", pattern: "hasHydrated|mounted|isClient", points: 3 },
         { id: "uses-effect", description: "Set the flag in useEffect", requiredIncludes: ["useEffect"], points: 2 },
         { id: "guards-render", description: "Guard rendering before hydration", pattern: "if\\s*\\(\\s*!\\s*(hasHydrated|mounted|isClient)\\s*\\)\\s*return", points: 3 }
@@ -896,7 +901,7 @@ function ThemeLabel() {
       type: "multiCheck",
       checks: [
         { id: "resets-state", description: "Reset state before action", requiredIncludes: ["setState(initialState)"], points: 3 },
-        { id: "uses-act", description: "Wrap action in act", requiredIncludes: ["act(() =>"], points: 2 },
+        { id: "uses-act", description: "Wrap action in act", pattern: "act\\s*\\(\\s*\\(\\s*\\)\\s*=>", points: 2 },
         { id: "uses-get-state", description: "Use getState to call and assert", requiredIncludes: ["getState()"], points: 2 },
         { id: "asserts", description: "Assert expected result", requiredIncludes: ["expect(", ".toBe("], points: 2 }
       ]

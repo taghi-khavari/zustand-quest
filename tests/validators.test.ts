@@ -3,6 +3,19 @@ import { levels } from "@/data/levels";
 import { validateCode } from "@/lib/validators/validators";
 
 describe("validateCode", () => {
+  it("accepts every authored level solution", () => {
+    for (const level of levels) {
+      const starterImports = level.starterCode
+        .split("\n")
+        .filter((line) => line.trim().startsWith("import "))
+        .join("\n");
+      const result = validateCode(level, `${starterImports}\n${level.solutionCode}`);
+
+      expect(result.failedChecks, level.id).toHaveLength(0);
+      expect(result.isCorrect, level.id).toBe(true);
+    }
+  });
+
   it("accepts the level solution", () => {
     const level = levels[0];
     const result = validateCode(level, level.solutionCode);
@@ -94,5 +107,52 @@ export const useBearStore = create<BearState>()((set) => ({
 
     expect(result.isCorrect).toBe(true);
     expect(result.failedChecks).toHaveLength(0);
+  });
+
+  it("accepts selector callbacks with non-state parameter names", () => {
+    const selectBears = validateCode(
+      levels[1],
+      `function BearCounter() {
+  const bears = useBearStore((s) => s.bears);
+  return <p>{bears} bears</p>;
+}`
+    );
+    const actionButton = validateCode(
+      levels[2],
+      `function AddBearButton() {
+  const increasePopulation = useBearStore((store) => store.increasePopulation);
+  return <button onClick={increasePopulation}>Add bear</button>;
+}`
+    );
+
+    expect(selectBears.isCorrect).toBe(true);
+    expect(actionButton.isCorrect).toBe(true);
+  });
+
+  it("accepts cart actions with equivalent parameter names", () => {
+    const addToCart = validateCode(
+      levels[5],
+      `addToCart: (nextProduct) =>
+  set((current) => ({ items: [...current.items, nextProduct] }))`
+    );
+    const removeFromCart = validateCode(
+      levels[6],
+      `removeItem: (productId) =>
+  set((cart) => ({ items: cart.items.filter((product) => product.id !== productId) }))`
+    );
+
+    expect(addToCart.isCorrect).toBe(true);
+    expect(removeFromCart.isCorrect).toBe(true);
+  });
+
+  it("rejects persisting modalOpen with any partialize parameter name", () => {
+    const level = levels[16];
+    const result = validateCode(
+      level,
+      `partialize: (s) => ({ theme: s.theme, modalOpen: s.modalOpen })`
+    );
+
+    expect(result.isCorrect).toBe(false);
+    expect(result.failedChecks.map((check) => check.id)).toContain("excludes-modal");
   });
 });
