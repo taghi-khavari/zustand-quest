@@ -189,6 +189,70 @@ export const useBearStore = create<BearState>()((set) => ({
     expect(result.failedChecks.map((check) => check.id)).toEqual(["imports-create", "creates-store"]);
   });
 
+  it("accepts whole-state backups in the optimistic cart rollback", () => {
+    const result = validateCode(
+      levels[13],
+      `import { create } from "zustand";
+
+type Product = { id: string; name: string; price: number };
+type CartState = {
+  items: Product[];
+  addItemOptimistic: (item: Product) => Promise<void>;
+};
+
+declare const saveItem: (item: Product) => Promise<void>;
+
+export const useCartStore = create<CartState>()((set, get) => ({
+  items: [],
+  addItemOptimistic: async (item) => {
+    const backup = get();
+    set((state) => ({ items: [...state.items, item] }));
+    try {
+      await saveItem(item);
+    } catch {
+      set({ items: backup.items });
+    }
+  },
+}));`
+    );
+
+    expect(result.isCorrect).toBe(true);
+    expect(result.failedChecks).toHaveLength(0);
+  });
+
+  it("does not count replacing existing cart items as the optimistic add", () => {
+    const result = validateCode(
+      levels[13],
+      `import { create } from "zustand";
+
+type Product = { id: string; name: string; price: number };
+type CartState = {
+  items: Product[];
+  addItemOptimistic: (item: Product) => Promise<void>;
+};
+
+declare const saveItem: (item: Product) => Promise<void>;
+
+export const useCartStore = create<CartState>()((set, get) => ({
+  items: [],
+  addItemOptimistic: async (item) => {
+    const backup = get();
+    set({
+      items: backup.items.map((value) => (value.id === item.id ? item : value))
+    });
+    try {
+      await saveItem(item);
+    } catch {
+      set({ items: backup.items });
+    }
+  },
+}));`
+    );
+
+    expect(result.isCorrect).toBe(false);
+    expect(result.failedChecks.map((check) => check.id)).toEqual(["optimistic-first"]);
+  });
+
   it("requires partial persistence to live inside a persisted Zustand store", () => {
     const result = validateCode(
       levels[16],

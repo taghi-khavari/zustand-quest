@@ -677,9 +677,9 @@ export const useCartStore = create<CartState>()((set, get) => ({
       checks: [
         { id: "imports-create", description: "Import create from Zustand", rule: "zustand-create-import", points: 1 },
         { id: "creates-store", description: "Create a CartState store with set and get", pattern: "create\\s*<\\s*CartState\\s*>\\s*(?:\\(\\s*\\)\\s*)?\\(\\s*\\(?\\s*set\\s*,\\s*get\\s*\\)?\\s*=>\\s*\\(\\s*\\{[\\s\\S]*addItemOptimistic\\s*:", points: 1 },
-        { id: "snapshot", description: "Save previous items", pattern: "const\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*[A-Za-z_$][\\w$]*\\s*\\(\\s*\\)\\.items\\b", points: 3 },
+        { id: "snapshot", description: "Save previous items", pattern: "const\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*[A-Za-z_$][\\w$]*\\s*\\(\\s*\\)(?:\\.items\\b)?", points: 3 },
         { id: "optimistic-first", description: "Set optimistic state before await", pattern: "addItemOptimistic\\s*:\\s*async\\s*\\(?\\s*([A-Za-z_$][\\w$]*)[\\s\\S]*?set\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*items\\s*:\\s*\\[\\s*\\.\\.\\.\\s*\\2\\.items\\s*,\\s*\\1\\s*\\][\\s\\S]*await", points: 3 },
-        { id: "rollback", description: "Rollback in catch", pattern: "catch[\\s\\S]*set\\s*\\(\\s*\\{\\s*items\\s*:\\s*[A-Za-z_$][\\w$]*\\s*\\}\\s*\\)", points: 3 }
+        { id: "rollback", description: "Rollback in catch", pattern: "catch[\\s\\S]*set\\s*\\(\\s*\\{\\s*items\\s*:\\s*[A-Za-z_$][\\w$]*(?:\\.items)?\\s*\\}\\s*\\)", points: 3 }
       ]
     },
     hints: ["Keep addItemOptimistic inside the object returned from create.", "Take a snapshot before the optimistic set.", "Update local state before await saveItem.", "Catch failure and set items back to previousItems."],
