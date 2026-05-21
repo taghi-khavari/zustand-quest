@@ -153,6 +153,24 @@ export const useBearStore = create<BearState>()((set) => ({
     expect(removeFromCart.isCorrect).toBe(true);
   });
 
+  it("requires the async fish action to live inside a Zustand store", () => {
+    const result = validateCode(
+      levels[12],
+      `fetchFish: async () => {
+  set({ status: "loading" });
+  try {
+    const fish = await mockFetchFish();
+    set({ fish, status: "success" });
+  } catch {
+    set({ status: "error" });
+  }
+}`
+    );
+
+    expect(result.isCorrect).toBe(false);
+    expect(result.failedChecks.map((check) => check.id)).toEqual(["imports-create", "creates-store"]);
+  });
+
   it("reports the specific wrong field in level five dependent updates", () => {
     const result = validateCode(
       levels[4],

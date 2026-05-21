@@ -565,7 +565,9 @@ export const useCartTotal = () =>
     story: "The fish market panel needs a client-state loading flow.",
     mission: "Implement fetchFish with loading, success, and error status.",
     explanation: "Zustand actions can be async. Use set before and after the awaited work to drive UI state.",
-    starterCode: `type Fish = { id: string; name: string };
+    starterCode: `import { create } from "zustand";
+
+type Fish = { id: string; name: string };
 type FishMarketState = {
   fish: Fish[];
   status: "idle" | "loading" | "success" | "error";
@@ -573,30 +575,50 @@ type FishMarketState = {
 };
 
 declare const mockFetchFish: () => Promise<Fish[]>;
-declare const set: (nextState: Partial<FishMarketState>) => void;
 
-fetchFish: async () => {
-  // TODO
-}`,
-    solutionCode: `fetchFish: async () => {
-  set({ status: "loading" });
-  try {
-    const fish = await mockFetchFish();
-    set({ fish, status: "success" });
-  } catch {
-    set({ status: "error" });
-  }
-}`,
+export const useFishMarketStore = create<FishMarketState>()((set) => ({
+  fish: [],
+  status: "idle",
+  fetchFish: async () => {
+    // TODO
+  },
+}));`,
+    solutionCode: `import { create } from "zustand";
+
+type Fish = { id: string; name: string };
+type FishMarketState = {
+  fish: Fish[];
+  status: "idle" | "loading" | "success" | "error";
+  fetchFish: () => Promise<void>;
+};
+
+declare const mockFetchFish: () => Promise<Fish[]>;
+
+export const useFishMarketStore = create<FishMarketState>()((set) => ({
+  fish: [],
+  status: "idle",
+  fetchFish: async () => {
+    set({ status: "loading" });
+    try {
+      const fish = await mockFetchFish();
+      set({ fish, status: "success" });
+    } catch {
+      set({ status: "error" });
+    }
+  },
+}));`,
     validation: {
       type: "multiCheck",
       checks: [
+        { id: "imports-create", description: "Import create from Zustand", rule: "zustand-create-import", points: 1 },
+        { id: "creates-store", description: "Create a FishMarketState store", pattern: "create\\s*<\\s*FishMarketState\\s*>\\s*(?:\\(\\s*\\)\\s*)?\\(\\s*\\(?\\s*set\\s*\\)?\\s*=>\\s*\\(\\s*\\{[\\s\\S]*fetchFish\\s*:", points: 1 },
         { id: "async-action", description: "Use an async action", requiredIncludes: ["async"], points: 2 },
         { id: "loading", description: "Set loading before awaiting", pattern: "set\\s*\\(\\s*\\{\\s*status\\s*:\\s*[\"']loading[\"']\\s*\\}\\s*\\)", points: 2 },
         { id: "awaits-fetch", description: "Await mockFetchFish", requiredIncludes: ["await mockFetchFish()"], points: 2 },
         { id: "handles-error", description: "Handle errors", pattern: "catch[\\s\\S]*set\\s*\\(\\s*\\{\\s*status\\s*:\\s*[\"']error[\"']\\s*\\}\\s*\\)", points: 2 }
       ]
     },
-    hints: ["Set status to loading first.", "Wrap await mockFetchFish() in try/catch.", "Set success with the fish payload, and error in catch."],
+    hints: ["Keep fetchFish inside the object returned from create.", "Set status to loading first.", "Wrap await mockFetchFish() in try/catch.", "Set success with the fish payload, and error in catch."],
     playgroundType: "async",
     successMessage: "The market now reports its async state."
   }),
