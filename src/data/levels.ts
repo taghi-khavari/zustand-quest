@@ -255,7 +255,26 @@ export const useBearStore = create<BearState>()((set) => ({
       checks: [
         { id: "uses-get-param", description: "Receive get in the store creator", pattern: "\\(\\s*\\(?\\s*[A-Za-z_$][\\w$]*\\s*,\\s*[A-Za-z_$][\\w$]*\\s*\\)?\\s*=>", points: 2 },
         { id: "reads-food", description: "Read food with get()", pattern: "[A-Za-z_$][\\w$]*\\s*\\(\\s*\\)\\.food\\b", points: 3 },
-        { id: "functional-update", description: "Use functional set for dependent updates", pattern: "set\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*bears\\s*:\\s*\\1\\.bears\\s*\\+\\s*1[\\s\\S]*food\\s*:\\s*\\1\\.food\\s*-\\s*1", points: 3 }
+        {
+          id: "functional-update",
+          description: "Use functional set for dependent updates",
+          pattern: "set\\s*\\(\\s*\\(?\\s*[A-Za-z_$][\\w$]*\\s*\\)?\\s*=>",
+          points: 1
+        },
+        {
+          id: "increments-bears",
+          description: "Increment bears from current bears",
+          pattern: "set\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*bears\\s*:\\s*\\1\\.bears\\s*\\+\\s*1",
+          message: "Use the current bear count: bears: state.bears + 1.",
+          points: 1
+        },
+        {
+          id: "decrements-food",
+          description: "Decrement food from current food",
+          pattern: "set\\s*\\(\\s*\\(?\\s*([A-Za-z_$][\\w$]*)\\s*\\)?\\s*=>[\\s\\S]*food\\s*:\\s*\\1\\.food\\s*-\\s*1",
+          message: "Use the current food count: food: state.food - 1.",
+          points: 1
+        }
       ]
     },
     hints: [

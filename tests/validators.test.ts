@@ -153,6 +153,38 @@ export const useBearStore = create<BearState>()((set) => ({
     expect(removeFromCart.isCorrect).toBe(true);
   });
 
+  it("reports the specific wrong field in level five dependent updates", () => {
+    const result = validateCode(
+      levels[4],
+      `import { create } from "zustand";
+
+type BearState = {
+  bears: number;
+  food: number;
+  addBearIfFoodAvailable: () => void;
+};
+
+export const useBearStore = create<BearState>()((set, get) => ({
+  bears: 0,
+  food: 2,
+  addBearIfFoodAvailable: () => {
+    if (get().food <= 0) return;
+
+    return set((state) => ({
+      bears: state.bears + 1,
+      food: state.bears - 1
+    }));
+  }
+}));`
+    );
+
+    expect(result.isCorrect).toBe(false);
+    expect(result.passedChecks).toContain("functional-update");
+    expect(result.passedChecks).toContain("increments-bears");
+    expect(result.failedChecks.map((check) => check.id)).toContain("decrements-food");
+    expect(result.failedChecks.find((check) => check.id === "decrements-food")?.message).toContain("state.food - 1");
+  });
+
   it("rejects persisting modalOpen with any partialize parameter name", () => {
     const level = levels[16];
     const result = validateCode(
